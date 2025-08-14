@@ -1,12 +1,3 @@
-// It's good practice to centralize Supabase client initialization.
-// For a larger app, you might create a separate file (e.g., supabaseClient.js)
-// and import the client where needed.
-const { createClient } = supabase;
-
-// Supabase Credentials
-const { supabaseUrl, supabaseKey } = window.SUPABASE_CONFIG;
-const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
 // DOM Elements
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
@@ -44,6 +35,7 @@ showLoginBtn.addEventListener('click', (e) => {
 });
 
 // Handle login form submission
+// It now uses the global _supabase client from supabase-client.js
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
@@ -54,11 +46,13 @@ loginForm.addEventListener('submit', async (e) => {
     if (error) {
         showMessage(error.message, true);
     } else {
-        window.location.href = 'index.html'; // Redirect to the main app
+        // Redirect to index.html to handle session routing
+        window.location.href = 'index.html'; 
     }
 });
 
 // Handle signup form submission
+// It now uses the global _supabase client from supabase-client.js
 signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('signup-email').value;
@@ -68,28 +62,15 @@ signupForm.addEventListener('submit', async (e) => {
     signupButton.disabled = true;
     signupButton.textContent = 'Signing up...';
 
-    const { error } = await _supabase.auth.signUp({ email, password });
+    const { data, error } = await _supabase.auth.signUp({ email, password });
 
     if (error) {
         showMessage(error.message, true);
     } else {
         showMessage('Success! Check your email for a confirmation link.', false);
         signupForm.reset();
-        // Redirect to login page after successful signup
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 3000); 
     }
 
     signupButton.disabled = false;
     signupButton.textContent = 'Sign Up';
-});
-
-// --- Initialization ---
-// On page load, check if the user is already logged in and redirect them.
-document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (session) {
-        window.location.href = 'app.html';
-    }
 });

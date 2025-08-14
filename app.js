@@ -1,8 +1,5 @@
+// This script now uses the global _supabase instance from supabase-client.js
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- SUPABASE CLIENT SETUP ---
-    const { createClient } = supabase;
-    const { supabaseUrl, supabaseKey } = window.SUPABASE_CONFIG;
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     // --- AUTHENTICATION CHECK ---
     const { data: { session } } = await _supabase.auth.getSession();
