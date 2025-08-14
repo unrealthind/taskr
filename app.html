@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project & Task Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+        .dark body {
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        .tab-btn.active { border-color: #4f46e5; color: #4f46e5; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-container { transition: transform 0.3s ease; }
+        .task-item.completed .task-title { text-decoration: line-through; color: #6b7280; }
+        .task-item.priority-1 { border-left-color: #ef4444; } /* High */
+        .task-item.priority-2 { border-left-color: #f97316; } /* Medium */
+        .task-item.priority-3 { border-left-color: #22c55e; } /* Low */
+
+        /* Status Badge Styles */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            line-height: 1;
+            display: inline-block;
+        }
+        .status-lead { background-color: #3b82f6; color: white; }
+        .status-dp-in-progress { background-color: #f97316; color: white; }
+        .status-bp-in-progress { background-color: #eab308; color: white; }
+        .status-complete { background-color: #22c55e; color: white; }
+        .status-lost { background-color: #ef4444; color: white; }
+
+        /* Dark Mode Specific Styles */
+        .dark .bg-white { background-color: #1f2937; }
+        .dark .bg-gray-50 { background-color: #374151; }
+        .dark .text-gray-900 { color: #f9fafb; }
+        .dark .text-gray-800 { color: #e5e7eb; }
+        .dark .text-gray-700 { color: #d1d5db; }
+        .dark .text-gray-600 { color: #9ca3af; }
+        .dark .text-gray-500 { color: #6b7280; }
+        .dark .border-gray-200 { border-color: #374151; }
+        .dark .border-gray-300 { border-color: #4b5563; }
+        .dark .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2); }
+        .dark .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12); }
+        .dark input, .dark select, .dark textarea {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        .dark input::placeholder, .dark textarea::placeholder {
+            color: #9ca3af;
+        }
+        .dark .task-item.completed .task-title { color: #9ca3af; }
+    </style>
+</head>
+<body>
+
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <h1 class="text-2xl font-bold text-gray-900">Raavi Interactive Inc.</h1>
+                    <div class="flex items-center gap-4">
+                        <nav class="flex space-x-4 border-b-2 border-transparent">
+                            <button id="tab-btn-projects" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Project Manager</button>
+                            <button id="tab-btn-tasks" class="tab-btn py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">To Do</button>
+                        </nav>
+                        <button id="theme-toggle" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <!-- Sun Icon -->
+                            <svg id="theme-icon-light" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-15.66l-.707.707M4.04 19.96l-.707.707M21 12h-1M4 12H3m15.66 8.66l-.707-.707M4.04 4.04l-.707-.707"/>
+                            </svg>
+                            <!-- Moon Icon -->
+                            <svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </button>
+                        <button id="logout-btn" class="text-sm font-medium text-red-600 hover:text-red-800">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Projects View -->
+            <div id="view-projects">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Projects List -->
+                    <div class="lg:col-span-2">
+                        <div class="flex flex-wrap justify-between items-center mb-4 gap-y-2">
+                            <h2 class="text-2xl font-semibold text-gray-800">My Projects</h2>
+                            <div id="project-filters" class="flex items-center gap-2 sm:gap-4">
+                                <select id="filter-project-status" class="bg-white border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="all">All Statuses</option>
+                                    <option value="lead">Lead</option>
+                                    <option value="dp-in-progress">DP in progress</option>
+                                    <option value="bp-in-progress">BP in progress</option>
+                                    <option value="complete">Complete</option>
+                                    <option value="lost">Lost</option>
+                                </select>
+                                <select id="filter-project-tasks-due" class="bg-white border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="all">All Tasks Due</option>
+                                    <option value="today">Today</option>
+                                    <option value="tomorrow">Tomorrow</option>
+                                    <option value="this-week">This Week</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                                <button id="clear-project-filters-btn" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Clear</button>
+                            </div>
+                        </div>
+                        <div id="project-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Project cards will be injected here -->
+                        </div>
+                        <p id="no-projects-message" class="hidden text-center text-gray-500 mt-8">You have no projects yet. Add one to get started!</p>
+                    </div>
+                    <!-- Add Project Form -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Add New Project</h3>
+                        <form id="add-project-form" class="space-y-4">
+                            <div>
+                                <label for="project-name" class="block text-sm font-medium text-gray-700">Project Name</label>
+                                <input type="text" id="project-name" name="project-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="project-client-name" class="block text-sm font-medium text-gray-700">Client Name</label>
+                                <input type="text" id="project-client-name" name="project-client-name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                             <div>
+                                <label for="project-address" class="block text-sm font-medium text-gray-700">Project Address</label>
+                                <input type="text" id="project-address" name="project-address" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                             <div>
+                                <label for="project-client-phone" class="block text-sm font-medium text-gray-700">Client Phone</label>
+                                <input type="tel" id="project-client-phone" name="project-client-phone" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                             <div>
+                                <label for="project-client-email" class="block text-sm font-medium text-gray-700">Client Email</label>
+                                <input type="email" id="project-client-email" name="project-client-email" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="project-status" class="block text-sm font-medium text-gray-700">Status</label>
+                                <select id="project-status" name="project-status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="lead" selected>Lead</option>
+                                    <option value="dp-in-progress">DP in progress</option>
+                                    <option value="bp-in-progress">BP in progress</option>
+                                    <option value="complete">Complete</option>
+                                    <option value="lost">Lost</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="project-value" class="block text-sm font-medium text-gray-700">Project Value ($)</label>
+                                <input type="number" id="project-value" name="project-value" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="project-notes" class="block text-sm font-medium text-gray-700">Initial Note (Optional)</label>
+                                <textarea id="project-notes" name="project-notes" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Add Project</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Tasks View -->
+            <div id="view-tasks" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Tasks List -->
+                    <div class="lg:col-span-2">
+                        <div class="flex flex-wrap justify-between items-center mb-4 gap-y-2">
+                            <h2 class="text-2xl font-semibold text-gray-800">All Tasks</h2>
+                            <div id="task-filters" class="flex items-center gap-2 sm:gap-4">
+                                <select id="filter-project" class="bg-white border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="all">All Projects</option>
+                                    <!-- Project options will be injected here -->
+                                </select>
+                                <select id="filter-priority" class="bg-white border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="all">All Priorities</option>
+                                    <option value="1">High</option>
+                                    <option value="2">Medium</option>
+                                    <option value="3">Low</option>
+                                </select>
+                                <select id="filter-date" class="bg-white border-gray-300 rounded-md shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="all">All Due Dates</option>
+                                    <option value="today">Today</option>
+                                    <option value="this-week">This Week</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                                <button id="clear-filters-btn" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Clear</button>
+                            </div>
+                        </div>
+                        <div id="task-list" class="space-y-4">
+                            <!-- Task items will be injected here -->
+                        </div>
+                        <p id="no-tasks-message" class="hidden text-center text-gray-500 mt-8">No tasks found. Add a task to see it here.</p>
+                    </div>
+                    <!-- Add Task Form -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4">Add New Task</h3>
+                        <form id="add-task-form" class="space-y-4">
+                            <div>
+                                <label for="task-title" class="block text-sm font-medium text-gray-700">Task Title</label>
+                                <input type="text" id="task-title" name="task-title" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                            </div>
+                            <div>
+                                <label for="task-project-select" class="block text-sm font-medium text-gray-700">Project</label>
+                                <select id="task-project-select" name="task-project-select" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="none">No Project</option>
+                                    <!-- Project options will be injected here -->
+                                </select>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="flex-1">
+                                    <label for="task-due-date" class="block text-sm font-medium text-gray-700">Due Date</label>
+                                    <input type="date" id="task-due-date" name="task-due-date" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                                </div>
+                                <div class="flex-1">
+                                    <label for="task-due-time" class="block text-sm font-medium text-gray-700">Due Time (Optional)</label>
+                                    <input type="time" id="task-due-time" name="task-due-time" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="task-priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                                <select id="task-priority" name="task-priority" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="1">High</option>
+                                    <option value="2" selected>Medium</option>
+                                    <option value="3">Low</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Add Task</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Single Project View -->
+            <div id="view-single-project" class="hidden">
+                 <button id="back-to-projects-btn" class="mb-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    &larr; Back to All Projects
+                </button>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div id="single-project-header" class="p-6 border-b border-gray-200">
+                        <!-- Single project header content here -->
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Tasks for this Project</h4>
+                        <div id="single-project-task-list" class="space-y-4">
+                            <!-- Tasks for this project here -->
+                        </div>
+                        <p id="single-project-no-tasks-message" class="hidden text-gray-500">No tasks for this project yet.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 border-t border-gray-200">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Project Notes</h4>
+                        <div id="project-notes-list" class="space-y-3 mb-4">
+                            <!-- Notes here -->
+                        </div>
+                        <form id="add-note-form" class="flex gap-2">
+                            <input type="text" id="new-note-text" class="flex-grow block w-full border-gray-300 rounded-md shadow-sm" placeholder="Add a new note..." required>
+                            <button type="submit" class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div id="edit-project-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform scale-95">
+            <h3 class="text-xl font-bold mb-4">Edit Project</h3>
+            <form id="edit-project-form" class="space-y-4">
+                <input type="hidden" id="edit-project-id">
+                <div>
+                    <label for="edit-project-name" class="block text-sm font-medium text-gray-700">Project Name</label>
+                    <input type="text" id="edit-project-name" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-project-status" class="block text-sm font-medium text-gray-700">Status</label>
+                     <select id="edit-project-status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="lead">Lead</option>
+                        <option value="dp-in-progress">DP in progress</option>
+                        <option value="bp-in-progress">BP in progress</option>
+                        <option value="complete">Complete</option>
+                        <option value="lost">Lost</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-project-client-name" class="block text-sm font-medium text-gray-700">Client Name</label>
+                    <input type="text" id="edit-project-client-name" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-project-address" class="block text-sm font-medium text-gray-700">Project Address</label>
+                    <input type="text" id="edit-project-address" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-project-client-phone" class="block text-sm font-medium text-gray-700">Client Phone</label>
+                    <input type="tel" id="edit-project-client-phone" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-project-client-email" class="block text-sm font-medium text-gray-700">Client Email</label>
+                    <input type="email" id="edit-project-client-email" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-project-value" class="block text-sm font-medium text-gray-700">Project Value ($)</label>
+                    <input type="number" id="edit-project-value" class="mt-1 block w-full">
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancel-edit-project-btn" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div> 
+
+    <!-- Edit Task Modal -->
+    <div id="edit-task-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform scale-95">
+            <h3 class="text-xl font-bold mb-4">Edit Task</h3>
+            <form id="edit-task-form" class="space-y-4">
+                <input type="hidden" id="edit-task-id">
+                <div>
+                    <label for="edit-task-title" class="block text-sm font-medium text-gray-700">Task Title</label>
+                    <input type="text" id="edit-task-title" class="mt-1 block w-full" required>
+                </div>
+                <div>
+                    <label for="edit-task-project-select" class="block text-sm font-medium text-gray-700">Project</label>
+                    <select id="edit-task-project-select" class="mt-1 block w-full">
+                        <option value="none">No Project</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-task-due-date" class="block text-sm font-medium text-gray-700">Due Date</label>
+                        <input type="date" id="edit-task-due-date" class="mt-1 block w-full" required>
+                    </div>
+                    <div>
+                        <label for="edit-task-due-time" class="block text-sm font-medium text-gray-700">Due Time</label>
+                        <input type="time" id="edit-task-due-time" class="mt-1 block w-full">
+                    </div>
+                </div>
+                <div>
+                    <label for="edit-task-priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select id="edit-task-priority" class="mt-1 block w-full">
+                        <option value="1">High</option>
+                        <option value="2">Medium</option>
+                        <option value="3">Low</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancel-edit-task-btn" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-md">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="modal-container bg-white rounded-lg shadow-xl w-full max-w-sm p-6 transform scale-95">
+            <h3 id="confirmation-title" class="text-lg font-bold mb-2">Are you sure?</h3>
+            <p id="confirmation-message" class="text-gray-600 mb-4">This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancel-confirmation-btn" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="confirm-action-btn" class="bg-red-600 text-white py-2 px-4 rounded-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>

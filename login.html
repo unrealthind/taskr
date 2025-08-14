@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Project Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center h-screen">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h1 class="text-gray-900 dark:text-white text-2xl font-bold mb-6 text-center">Project Manager</h1>
+        
+        <!-- Login View -->
+        <div id="auth-view">
+            <form id="login-form" class="space-y-4">
+                <input type="email" id="email" placeholder="Email" class="w-full p-3 bg-gray-50 dark:bg-gray-700 rounded text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <input type="password" id="password" placeholder="Password" class="w-full p-3 bg-gray-50 dark:bg-gray-700 rounded text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition-colors">Login</button>
+            </form>
+            <p class="text-center text-gray-500 dark:text-gray-400 mt-4">
+                Don't have an account? <a href="#" id="show-signup" class="text-indigo-600 dark:text-indigo-400 hover:underline">Sign up</a>
+            </p>
+        </div>
+
+        <!-- Signup View -->
+        <div id="signup-view" class="hidden">
+            <form id="signup-form" class="space-y-4">
+                <input type="email" id="signup-email" placeholder="Email" class="w-full p-3 bg-gray-50 dark:bg-gray-700 rounded text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <input type="password" id="signup-password" placeholder="Password" class="w-full p-3 bg-gray-50 dark:bg-gray-700 rounded text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded hover:bg-indigo-700 transition-colors">Sign Up</button>
+            </form>
+            <p class="text-center text-gray-500 dark:text-gray-400 mt-4">
+                Already have an account? <a href="#" id="show-login" class="text-indigo-600 dark:text-indigo-400 hover:underline">Login</a>
+            </p>
+        </div>
+
+        <!-- Message/Error Container -->
+        <p id="message-container" class="text-center mt-4"></p>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Login Logic -->
+    <script src="login.js"></script>
+</body>
+</html>
