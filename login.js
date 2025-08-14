@@ -43,30 +43,6 @@ showLoginBtn.addEventListener('click', (e) => {
     messageContainer.textContent = ''; // Clear any previous messages
 });
 
-// Handle signup form submission
-signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    
-    // Show loading state on button if desired
-    const signupButton = signupForm.querySelector('button');
-    signupButton.disabled = true;
-    signupButton.textContent = 'Signing up...';
-
-    const { error } = await _supabase.auth.signUp({ email, password });
-
-    if (error) {
-        showMessage(error.message, true);
-    } else {
-        showMessage('Success! Check your email for a confirmation link.', false);
-        signupForm.reset();
-    }
-    
-    signupButton.disabled = false;
-    signupButton.textContent = 'Sign Up';
-});
-
 // Handle login form submission
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -78,8 +54,35 @@ loginForm.addEventListener('submit', async (e) => {
     if (error) {
         showMessage(error.message, true);
     } else {
-        window.location.href = 'app.html'; // Redirect to the main app
+        window.location.href = 'index.html'; // Redirect to the main app
     }
+});
+
+// Handle signup form submission
+signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+
+    const signupButton = signupForm.querySelector('button');
+    signupButton.disabled = true;
+    signupButton.textContent = 'Signing up...';
+
+    const { error } = await _supabase.auth.signUp({ email, password });
+
+    if (error) {
+        showMessage(error.message, true);
+    } else {
+        showMessage('Success! Check your email for a confirmation link.', false);
+        signupForm.reset();
+        // Redirect to login page after successful signup
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 3000); 
+    }
+
+    signupButton.disabled = false;
+    signupButton.textContent = 'Sign Up';
 });
 
 // --- Initialization ---

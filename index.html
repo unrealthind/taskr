@@ -9,19 +9,17 @@
     </style>
 </head>
 <body>
-    <p>Loading...</p>
+    <p>xxxLoading...</p>
 
-    <!-- Load Supabase and your environment config HELLOO-->
+    <!-- Load Supabase and your environment config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/env.js"></script> <!-- Assuming you're using the server setup -->
+    <script src="env.js"></script>
+    <!-- Centralized Supabase client -->
+    <script src="supabase-client.js"></script>
 
     <script>
-        // Initialize Supabase
-        const { createClient } = supabase;
-        const { supabaseUrl, supabaseKey } = window.SUPABASE_CONFIG;
-        const _supabase = createClient(supabaseUrl, supabaseKey);
-
-        // Check session and redirect immediately
+        // This script now uses the _supabase instance from supabase-client.js
+        // to check the session and redirect the user.
         document.addEventListener('DOMContentLoaded', async () => {
             const { data: { session } } = await _supabase.auth.getSession();
             if (session) {
